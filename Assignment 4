@@ -1,1 +1,183 @@
+login as: ec2-user
+Authenticating with public key "imported-openssh-key"
+Last login: Fri Oct 14 04:55:17 2022 from 49.36.144.222
+
+       __|  __|_  )
+       _|  (     /   Amazon Linux 2 AMI
+      ___|\___|___|
+
+https://aws.amazon.com/amazon-linux-2/
+4 package(s) needed for security, out of 10 available
+Run "sudo yum update" to apply all updates.
+
+[ec2-user@ip-172-31-15-190 ~]$ sudo su -
+
+Last login: Fri Oct 14 04:55:27 UTC 2022 on pts/0
+
+[root@ip-172-31-15-190 ~]# git clone https://github.com/ashishrpandey/example-voting-app
+Cloning into 'example-voting-app'...
+remote: Enumerating objects: 494, done.
+remote: Total 494 (delta 0), reused 0 (delta 0), pack-reused 494
+Receiving objects: 100% (494/494), 236.17 KiB | 261.00 KiB/s, done.
+Resolving deltas: 100% (179/179), done.
+
+[root@ip-172-31-15-190 ~]# cd go to /root/example-voting-app/k8s-specifications
+-bash: cd: go: No such file or directory
+
+[root@ip-172-31-15-190 ~]# ls
+example-voting-app  kubernetes-training
+[root@ip-172-31-15-190 ~]# cd /root/example-voting-app/k8s-specifications
+
+[root@ip-172-31-15-190 k8s-specifications]# vi vote-service.yaml
+[root@ip-172-31-15-190 k8s-specifications]# vi result-service.yaml
+
+[root@ip-172-31-15-190 k8s-specifications]# kubectl apply -f .
+deployment.apps/db created
+service/db created
+deployment.apps/redis created
+service/redis created
+deployment.apps/result created
+service/result created
+deployment.apps/vote created
+service/vote created
+deployment.apps/worker created
+
+[root@ip-172-31-15-190 k8s-specifications]# kubectl get all
+NAME                          READY   STATUS    RESTARTS   AGE
+pod/db-b54cd94f4-v7w9x        1/1     Running   0          9s
+pod/redis-868d64d78-czlt8     1/1     Running   0          9s
+pod/result-5d57b59f4b-z7plq   1/1     Running   0          9s
+pod/vote-94849dc97-7hv7w      1/1     Running   0          9s
+pod/worker-dd46d7584-vc4jp    1/1     Running   0          8s
+
+NAME                 TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)          AGE
+service/db           ClusterIP   10.96.126.46    <none>        5432/TCP         9s
+service/kubernetes   ClusterIP   10.96.0.1       <none>        443/TCP          30s
+service/redis        ClusterIP   10.110.20.199   <none>        6379/TCP         9s
+service/result       NodePort    10.111.76.251   <none>        5001:31003/TCP   9s
+service/vote         NodePort    10.97.228.113   <none>        5000:31002/TCP   8s
+
+NAME                     READY   UP-TO-DATE   AVAILABLE   AGE
+deployment.apps/db       1/1     1            1           9s
+deployment.apps/redis    1/1     1            1           9s
+deployment.apps/result   1/1     1            1           9s
+deployment.apps/vote     1/1     1            1           9s
+deployment.apps/worker   1/1     1            1           8s
+
+NAME                                DESIRED   CURRENT   READY   AGE
+replicaset.apps/db-b54cd94f4        1         1         1       9s
+replicaset.apps/redis-868d64d78     1         1         1       9s
+replicaset.apps/result-5d57b59f4b   1         1         1       9s
+replicaset.apps/vote-94849dc97      1         1         1       9s
+replicaset.apps/worker-dd46d7584    1         1         1       8s
+[root@ip-172-31-15-190 k8s-specifications]#
+
+Obervation- voting APP created and port changed  for worker vote service is 31002 and  result serviec is 31003 ,
+two web pages open http://18.141.206.11:31002/ and http://18.141.206.11:31003/.
+Voting done and observe the result.
+
+Deleted vote POD and no impact observed as pod created again.
+
+[root@ip-172-31-15-190 ~]# kubectl delete po vote-94849dc97-fff7j
+pod "vote-94849dc97-fff7j" deleted
+^[[A^C
+[root@ip-172-31-15-190 ~]# kubectl get po
+NAME                      READY   STATUS        RESTARTS   AGE
+db-b54cd94f4-v7w9x        1/1     Running       0          9m53s
+redis-868d64d78-czlt8     1/1     Running       0          9m53s
+result-5d57b59f4b-z7plq   1/1     Running       0          9m53s
+vote-94849dc97-fff7j      1/1     Terminating   0          43s
+vote-94849dc97-x5mc9      1/1     Running       0          10s
+worker-dd46d7584-vc4jp    1/1     Running       0          9m52s
+[root@ip-172-31-15-190 ~]# kubectl get po
+NAME                      READY   STATUS        RESTARTS   AGE
+db-b54cd94f4-v7w9x        1/1     Running       0          9m55s
+redis-868d64d78-czlt8     1/1     Running       0          9m55s
+result-5d57b59f4b-z7plq   1/1     Running       0          9m55s
+vote-94849dc97-fff7j      1/1     Terminating   0          45s
+vote-94849dc97-x5mc9      1/1     Running       0          12s
+[root@ip-172-31-15-190 ~]# kubectl get po
+NAME                      READY   STATUS    RESTARTS   AGE
+db-b54cd94f4-v7w9x        1/1     Running   0          10m
+redis-868d64d78-czlt8     1/1     Running   0          10m
+result-5d57b59f4b-z7plq   1/1     Running   0          10m
+vote-94849dc97-x5mc9      1/1     Running   0          58s
+worker-dd46d7584-vc4jp    1/1     Running   0          10m
+[root@ip-172-31-15-190 ~]#
+
+Deleted Worker POD and no impact observed as pod created again.
+
+[root@ip-172-31-15-190 ~]# kubectl delete po worker-dd46d7584-vc4jp
+pod "worker-dd46d7584-vc4jp" deleted
+^C
+[root@ip-172-31-15-190 ~]# kubectl get po
+NAME                      READY   STATUS        RESTARTS   AGE
+db-b54cd94f4-v7w9x        1/1     Running       0          12m
+redis-868d64d78-czlt8     1/1     Running       0          12m
+result-5d57b59f4b-z7plq   1/1     Running       0          12m
+vote-94849dc97-x5mc9      1/1     Running       0          2m38s
+worker-dd46d7584-25zs5    1/1     Running       0          7s
+worker-dd46d7584-vc4jp    1/1     Terminating   0          12m
+[root@ip-172-31-15-190 ~]# kubectl get po
+NAME                      READY   STATUS    RESTARTS   AGE
+db-b54cd94f4-v7w9x        1/1     Running   0          13m
+redis-868d64d78-czlt8     1/1     Running   0          13m
+result-5d57b59f4b-z7plq   1/1     Running   0          13m
+vote-94849dc97-x5mc9      1/1     Running   0          3m30s
+worker-dd46d7584-25zs5    1/1     Running   0          59s
+[root@ip-172-31-15-190 ~]#
+
+Deleted Db POD and worker pod got restarted ,due to which we able to give vote ,but  unable to observe voting changes in web page,
+
+[root@ip-172-31-15-190 ~]# kubectl delete po db-b54cd94f4-v7w9x
+pod "db-b54cd94f4-v7w9x" deleted
+^C
+[root@ip-172-31-15-190 ~]# kubectl get po
+NAME                      READY   STATUS        RESTARTS   AGE
+db-b54cd94f4-rw5zr        1/1     Running       0          13s
+db-b54cd94f4-v7w9x        1/1     Terminating   0          14m
+redis-868d64d78-czlt8     1/1     Running       0          14m
+result-5d57b59f4b-z7plq   1/1     Running       0          14m
+vote-94849dc97-x5mc9      1/1     Running       0          4m34s
+worker-dd46d7584-25zs5    1/1     Running       0          2m3s
+
+[root@ip-172-31-15-190 ~]# kubectl get po
+NAME                      READY   STATUS    RESTARTS   AGE
+db-b54cd94f4-rw5zr        1/1     Running   0          41s
+redis-868d64d78-czlt8     1/1     Running   0          14m
+result-5d57b59f4b-z7plq   1/1     Running   0          14m
+vote-94849dc97-x5mc9      1/1     Running   0          5m2s
+worker-dd46d7584-25zs5    1/1     Running   1          2m31s
+[root@ip-172-31-15-190 ~]#
+
+
+As result not reflect on web page,so we given restart to result pod after which result showing properly.
+[root@ip-172-31-15-190 ~]# kubectl delete po result-5d57b59f4b-z7plq
+pod "result-5d57b59f4b-z7plq" deleted
+^C
+[root@ip-172-31-15-190 ~]# kubectl get po
+NAME                      READY   STATUS        RESTARTS   AGE
+db-b54cd94f4-rw5zr        1/1     Running       0          4m55s
+redis-868d64d78-czlt8     1/1     Running       0          18m
+result-5d57b59f4b-lt9st   1/1     Running       0          4s
+result-5d57b59f4b-z7plq   1/1     Terminating   0          18m
+vote-94849dc97-x5mc9      1/1     Running       0          9m16s
+worker-dd46d7584-25zs5    1/1     Running       1          6m45s
+[root@ip-172-31-15-190 ~]# kubectl get po
+NAME                      READY   STATUS    RESTARTS   AGE
+db-b54cd94f4-rw5zr        1/1     Running   0          5m32s
+redis-868d64d78-czlt8     1/1     Running   0          19m
+result-5d57b59f4b-lt9st   1/1     Running   0          41s
+vote-94849dc97-x5mc9      1/1     Running   0          9m53s
+worker-dd46d7584-25zs5    1/1     Running   1          7m22s
+[root@ip-172-31-15-190 ~]#
+
+
+
+
+
+
+
+
+
 
